@@ -9,7 +9,9 @@ from tkinter import filedialog
 from tkinter import ttk
 import tkinter.messagebox
 from PIL import Image, ImageTk      #
-from Class_camera import Camera
+
+# import class dependency
+from Class_learing import Learning
 
 import os
 import sys                   #
@@ -29,8 +31,7 @@ class AddModel:
         # size of windown and position start
         self.master_add.geometry("1280x720+0+0")
         self.init_state = 0
-        # camera config
-        self.cam = cv2.VideoCapture(0)
+
         self.cropping = False
         self.x_start, self.y_start, self.x_end, self.y_end = 0, 0, 0, 0
         self.oriImage = None
@@ -53,11 +54,20 @@ class AddModel:
             self.master_add)
         self.frame1.place(x=0, y=150)
 
+    def save_newJson(self):
+        print("save json: ", self.newModel_dict["codi_pos"])
+        with open('NewData.json', 'w') as json_file:
+            # เขียน Python Dict ลงในไฟล์ NewData.json
+            json.dump(self.newModel_dict, json_file)
+
     def get_master(self):
         try:
             for widget in self.frame1.winfo_children():
                 widget.destroy()
-            # config open image fram
+            for widget in self.fram_in_get_master.winfo_children():
+                widget.destroy()
+            for widget in self.fram_list_pos.winfo_children():
+                widget.destroy()
         except:
             pass
 
@@ -99,14 +109,16 @@ class AddModel:
             return image_croped
 
         def crop_position_operation():
-            try:
-                if self.newModel_dict["name"] == None:
-                    raise Exception()
-                else:
-                    cv2.namedWindow("image")
-                    cv2.setMouseCallback("image", mouse_crop)
-                    while True:
-                        check, frame = self.cam.read()
+            # camera config
+            cam = cv2.VideoCapture(0)
+            if self.newModel_dict["name"] == None:
+                pass
+            else:
+                cv2.namedWindow("image")
+                cv2.setMouseCallback("image", mouse_crop)
+                while True:
+                    check, frame = cam.read()
+                    if check:
                         image = frame
                         self.oriImage = image.copy()
                         self.i = image.copy()
@@ -119,27 +131,27 @@ class AddModel:
                         k = cv2.waitKey(1)
                         if k == ord('q'):
                             break
-                        cv2.waitKey(1)
+
                     # add crop position to dict model
-                    cv2.destroyAllWindows()
-                    self.newModel_dict["codi_pos"].append(
-                        [self.x_start, self.y_start, self.x_end, self.y_end])
+                    else:
+                        print("check:", check)
+                cv2.destroyAllWindows()
 
-                # show image croped on GUI
-                show = draw_crop_func(
-                    self.newModel_dict["codi_pos"], self.i.copy())
-                # show list for component
-                show_list_position()
+                self.newModel_dict["codi_pos"].append(
+                    [self.x_start, self.y_start, self.x_end, self.y_end])
 
-                resize_image = cv2.resize(show, (640, 480))
-                resize_image = cv2.cvtColor(resize_image, cv2.COLOR_BGR2RGB)
-                image = Image.fromarray(resize_image)
-                iago = ImageTk.PhotoImage(image)
-                show_image.configure(image=iago)
-                show_image.image = iago
+            # show image croped on GUI
+            show = draw_crop_func(
+                self.newModel_dict["codi_pos"], self.i.copy())
+            # show list for component
+            show_list_position()
 
-            except Exception as e:
-                logger.error('Failed to upload to ftp: ' + str(e))
+            resize_image = cv2.resize(show, (640, 480))
+            resize_image = cv2.cvtColor(resize_image, cv2.COLOR_BGR2RGB)
+            image = Image.fromarray(resize_image)
+            iago = ImageTk.PhotoImage(image)
+            show_image.configure(image=iago)
+            show_image.image = iago
 
         def show_list_position():
             list_pos = self.newModel_dict["codi_pos"]
@@ -150,6 +162,8 @@ class AddModel:
                 Button(self.fram_list_pos, text=p, fg="blue", bg="red", command=lambda p=p: delete_croped(p)).grid(
                     row=start_row, column=1)
                 start_row = start_row+1
+            PB_saveNewModelJson = Button(self.fram_list_pos, text="SAVE JSON", fg="yellow", bg="green", command=self.save_newJson).grid(
+                row=start_row, column=0)
 
         def delete_croped(data):
             print("delete image: ", data)
@@ -194,16 +208,33 @@ class AddModel:
         show_image = Label(self.frame1, width=640, height=480)
         show_image.pack()
 
+# Buton learning
     def learning(self):
-        try:
-            for widget in self.frame1.winfo_children():
-                widget.destroy()
-        except:
-            pass
+        for widget in self.frame1.winfo_children():
+            widget.destroy()
+        for widget in self.fram_in_get_master.winfo_children():
+            widget.destroy()
+        for widget in self.fram_list_pos.winfo_children():
+            widget.destroy()
 
-        title_learning = Label(self.frame1, text="Learning...", font=(
-            "Ariel", 11), fg="yellow", bg="red",)
-        title_learning.pack()
+        learing_ope = Learning(self.master_add)
+    # def learning(self):
+    #     try:
+    #         for widget in self.frame1.winfo_children():
+    #             widget.destroy()
+    #         for widget in self.fram_in_get_master.winfo_children():
+    #             widget.destroy()
+    #         for widget in self.fram_list_pos.winfo_children():
+    #             widget.destroy()
+    #     except:
+    #         pass
+
+    #     show_image = Label(self.frame1, width=640, height=480)
+    #     show_image.pack()
+    #     title_learning = Label(self.frame1, text="IMAGE", font=(
+    #         "Ariel", 11), fg="yellow", bg="red",)
+    #     title_learning.pack()
 
     def EXIT_AddModel(self):
+        cv2.destroyAllWindows()
         self.master_add.destroy()
