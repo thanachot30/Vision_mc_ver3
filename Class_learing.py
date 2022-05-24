@@ -12,6 +12,7 @@ from PIL import Image, ImageTk      #
 
 
 import os
+from os import listdir
 import sys                   #
 from functools import partial       #
 import time
@@ -69,9 +70,32 @@ class Learning:
         self.ReadnewModel_dict = {}
 
         # init read json file for get position crop
+        # Operation step
         self.read_json_file()
+        self.mkdir_pos()
         self.cam_learning = cv2.VideoCapture(0)
+        self.cam_learning.set(cv2.CAP_PROP_AUTOFOCUS, 1)
         self.show_camera()
+
+    def mkdir_pos(self):
+        sub_folder = ["ok", "ng"]
+        directory = "pos_"
+        parent_dir = "D:/p_ARM\ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/"
+        for pos in range(len(self.ReadnewModel_dict["codi_pos"])):
+            directory_pos = directory+str(pos+1)
+            path = os.path.join(parent_dir, directory_pos)
+            os.mkdir(path)
+            print("Directory '% s' created" % directory_pos)
+        # mkdir subfolder ok,ng
+        file_list = listdir(parent_dir)
+        for j in file_list:
+            print(j)
+            para = "D:/p_ARM\ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/" + \
+                j + "/"
+            for p in sub_folder:
+                path_sub = os.path.join(para, p)
+                print(p)
+                os.mkdir(path_sub)
 
     def model_learing(self):
         print("learing")
@@ -81,24 +105,47 @@ class Learning:
             self.ReadnewModel_dict = json.load(f)
         print("JSON FILE: ", self.ReadnewModel_dict)
 
-    def croping_image(self, img):
+    def croping_image(self, img, state):
         image_actual = img
-        for pos in self.ReadnewModel_dict["codi_pos"]:
-            croping = image_actual[int(pos[1]):int(
-                pos[3]), int(pos[0]):int(pos[2])]
-            # #code for test crop inage
-            cv2.imshow("Cropped image", croping)
-            cv2.waitKey(0)
-
-            # name_image = ""
-            # cv2.imwrite()
+        # parent_dir = "D:/p_ARM\ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/"
+        # file_list = listdir(parent_dir)
+        for index_pos in range(len(self.ReadnewModel_dict["codi_pos"])):
+           # part of crop image
+            if state == "ok":
+                pos = self.ReadnewModel_dict["codi_pos"][index_pos]
+                croping = image_actual[int(pos[1]):int(
+                    pos[3]), int(pos[0]):int(pos[2])]
+                resize_crop = cv2.resize(croping, (50, 50))
+                # part of access file
+                path_to_pos = "D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/pos_" + \
+                    str(index_pos+1)+"/ok/"
+                len_actual_image = len(listdir(path_to_pos))
+                path_save_image = path_to_pos+"pos_" + \
+                    str(index_pos+1)+"_ok"+str(len_actual_image+1)+".jpg"
+                print(path_save_image)
+                cv2.imwrite(path_save_image, resize_crop)
+            elif state == "ng":
+                pos = self.ReadnewModel_dict["codi_pos"][index_pos]
+                croping = image_actual[int(pos[1]):int(
+                    pos[3]), int(pos[0]):int(pos[2])]
+                resize_crop = cv2.resize(croping, (50, 50))
+                # part of access file
+                path_to_pos = "D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/pos_" + \
+                    str(index_pos+1)+"/ng/"
+                len_actual_image = len(listdir(path_to_pos))
+                path_save_image = path_to_pos+"pos_" + \
+                    str(index_pos+1)+"_ng"+str(len_actual_image+1)+".jpg"
+                print(path_save_image)
+                cv2.imwrite(path_save_image, resize_crop)
+            else:
+                print("croping_image imahe lose state")
 
     def get_ok(self):
         # get image from show_camera loop actual
         print("PB get ok")
         ok_image = self.Frame
         # save and cut croping sub image position and pass argumant is raw image from actual image
-        self.croping_image(self.Frame_raw)
+        self.croping_image(self.Frame_raw, "ok")
         #
         image = cv2.resize(ok_image, (200, 150))
         resize = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -111,6 +158,9 @@ class Learning:
         # get image from show_camera loop actual
         print("PB get ng")
         ng_image = self.Frame
+        # save and cut croping sub image position and pass argumant is raw image from actual image
+        self.croping_image(self.Frame_raw, "ng")
+
         image = cv2.resize(ng_image, (200, 150))
         resize = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = Image.fromarray(resize)
