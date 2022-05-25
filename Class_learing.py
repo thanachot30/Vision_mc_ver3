@@ -2,7 +2,6 @@ from tracemalloc import start
 from turtle import color, width
 import cv2
 from matplotlib.pyplot import text
-import numpy as np
 from tkinter import *               #
 
 from tkinter import filedialog
@@ -19,6 +18,16 @@ import time
 import pyautogui
 import json
 import logging
+# import for tensorflow
+import matplotlib.pyplot as plt
+import numpy as np
+import PIL
+import tensorflow as tf
+
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.models import Sequential
+##########
 
 
 class Learning:
@@ -79,7 +88,7 @@ class Learning:
 
     def mkdir_pos(self):
         sub_folder = ["ok", "ng"]
-        directory = "pos_"
+        directory = "pos"
         parent_dir = "D:/p_ARM\ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/"
         for pos in range(len(self.ReadnewModel_dict["codi_pos"])):
             directory_pos = directory+str(pos+1)
@@ -98,7 +107,98 @@ class Learning:
                 os.mkdir(path_sub)
 
     def model_learing(self):
-        print("learing")
+        parent_dir = "D:/p_ARM\ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/"
+        file_list = listdir(parent_dir)
+        for j in file_list:
+            print(j)
+            para = "D:/p_ARM\ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/" + \
+                j + "/"
+            print("learning........."+str(j))
+            batch_size = 32
+            img_height = 50
+            img_width = 50
+            import pathlib
+            data_dir = pathlib.Path(para)
+            # Create a dataset
+            train_ds = tf.keras.utils.image_dataset_from_directory(
+                data_dir,
+                validation_split=0.2,
+                subset="training",
+                seed=123,
+                image_size=(img_height, img_width),
+                batch_size=batch_size)
+
+            val_ds = tf.keras.utils.image_dataset_from_directory(
+                data_dir,
+                validation_split=0.2,
+                subset="validation",
+                seed=123,
+                image_size=(img_height, img_width),
+                batch_size=batch_size)
+
+            class_names = train_ds.class_names
+            print(class_names)
+
+            AUTOTUNE = tf.data.AUTOTUNE
+            train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
+            val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+            # Standardize the data
+            normalization_layer = layers.Rescaling(1./255)
+            normalized_ds = train_ds.map(
+                lambda x, y: (normalization_layer(x), y))
+            image_batch, labels_batch = next(iter(normalized_ds))
+
+            # Create the model
+            num_classes = len(class_names)
+            model = Sequential([
+                layers.Rescaling(
+                    1./255, input_shape=(img_height, img_width, 3)),
+                layers.Conv2D(16, 3, padding='same', activation='relu'),
+                layers.MaxPooling2D(),
+                # layers.Conv2D(32, 3, padding='same', activation='relu'),
+                # layers.MaxPooling2D(),
+                # layers.Conv2D(64, 3, padding='same', activation='relu'),
+                # layers.MaxPooling2D(),
+                layers.Flatten(),
+                layers.Dense(128, activation='relu'),
+                layers.Dense(num_classes)
+            ])
+            model.compile(optimizer='adam',
+                          loss=tf.keras.losses.SparseCategoricalCrossentropy(
+                              from_logits=True),
+                          metrics=['accuracy'])
+            # Train the model
+            epochs = 10
+            history = model.fit(
+                train_ds,
+                validation_data=val_ds,
+                epochs=epochs
+            )
+            # Visualize training results
+            acc = history.history['accuracy']
+            val_acc = history.history['val_accuracy']
+
+            loss = history.history['loss']
+            val_loss = history.history['val_loss']
+
+            epochs_range = range(epochs)
+
+            plt.figure(figsize=(8, 8))
+            plt.subplot(1, 2, 1)
+            plt.plot(epochs_range, acc, label='Training Accuracy')
+            plt.plot(epochs_range, val_acc, label='Validation Accuracy')
+            plt.legend(loc='lower right')
+            plt.title('Training and Validation Accuracy')
+
+            plt.subplot(1, 2, 2)
+            plt.plot(epochs_range, loss, label='Training Loss')
+            plt.plot(epochs_range, val_loss, label='Validation Loss')
+            plt.legend(loc='upper right')
+            plt.title('Training and Validation Loss')
+            plt.show()
+            save_ml_path = "D:/p_ARM\ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_save_ml/model_" + \
+                str(j)+".h5"
+            model.save(save_ml_path)
 
     def read_json_file(self):
         with open('NewData.json') as f:
@@ -117,10 +217,10 @@ class Learning:
                     pos[3]), int(pos[0]):int(pos[2])]
                 resize_crop = cv2.resize(croping, (50, 50))
                 # part of access file
-                path_to_pos = "D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/pos_" + \
+                path_to_pos = "D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/pos" + \
                     str(index_pos+1)+"/ok/"
                 len_actual_image = len(listdir(path_to_pos))
-                path_save_image = path_to_pos+"pos_" + \
+                path_save_image = path_to_pos+"pos" + \
                     str(index_pos+1)+"_ok"+str(len_actual_image+1)+".jpg"
                 print(path_save_image)
                 cv2.imwrite(path_save_image, resize_crop)
@@ -130,10 +230,10 @@ class Learning:
                     pos[3]), int(pos[0]):int(pos[2])]
                 resize_crop = cv2.resize(croping, (50, 50))
                 # part of access file
-                path_to_pos = "D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/pos_" + \
+                path_to_pos = "D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_new_model/pos" + \
                     str(index_pos+1)+"/ng/"
                 len_actual_image = len(listdir(path_to_pos))
-                path_save_image = path_to_pos+"pos_" + \
+                path_save_image = path_to_pos+"pos" + \
                     str(index_pos+1)+"_ng"+str(len_actual_image+1)+".jpg"
                 print(path_save_image)
                 cv2.imwrite(path_save_image, resize_crop)
