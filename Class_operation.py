@@ -1,3 +1,4 @@
+from ast import Return
 import cv2
 from matplotlib.pyplot import text
 import numpy as np
@@ -74,15 +75,16 @@ class Operation:
             predictions = model.predict(img_array)
             score = tf.nn.softmax(predictions[0])
 
-            print(predictions)
+            return class_names[np.argmax(score)], 100 * np.max(score)
 
-            print(
-                "This image "+"pos" +
-                str(model_number) +
-                " belongs to {} with a {:.2f} percent confidence."
-                .format(class_names[np.argmax(score)], 100 * np.max(score))
-            )
+            # print(predictions)
 
+            # print(
+            #     "This image "+"pos" +
+            #     str(model_number) +
+            #     " belongs to {} with a {:.2f} percent confidence."
+            #     .format(class_names[np.argmax(score)], 100 * np.max(score))
+            # )
         def draw_crop_func(img):
             image_actual = img
             for index_pos in range(len(self.readjson["codi_pos"])):
@@ -91,11 +93,24 @@ class Operation:
                     pos[3]), int(pos[0]):int(pos[2])]
                 resize_crop = cv2.resize(croping, (50, 50))
                 # save actual image
-                cv2.imwrite(
-                    r"D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_actual_image/{}.jpg".format("pos"+str(index_pos+1)), resize_crop)
-                predict_result = predict_ok_ng(resize_crop, index_pos)
-                image_actual = cv2.rectangle(image_actual, (pos[0], pos[1]),
-                                             (pos[2], pos[3]), (0, 255, 0), 2)
+                cv2.imwrite(r"D:/p_ARM/ANTROBOTICS_VISION_MC_SMALL_3/Vision_mc_ver3/data_actual_image/{}.jpg".format(
+                    "pos"+str(index_pos+1)), resize_crop)
+                predict_result, score_100 = predict_ok_ng(
+                    resize_crop, index_pos)
+
+                if predict_result == "ok":
+                    image_actual = cv2.rectangle(image_actual, (pos[0], pos[1]),
+                                                 (pos[2], pos[3]), (0, 255, 0), 2)
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(img, str(
+                        score_100), (pos[0], pos[1]), font, 1.5, (0, 0, 0), 3, cv2.LINE_AA)
+
+                else:
+                    image_actual = cv2.rectangle(image_actual, (pos[0], pos[1]),
+                                                 (pos[2], pos[3]), (0, 0, 255), 2)
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(img, str(
+                        score_100), (pos[0], pos[1]), font, 1.5, (0, 0, 0), 3, cv2.LINE_AA)
             return image_actual
 
         def show_process_image():
@@ -122,6 +137,7 @@ class Operation:
             else:
                 print("cam open is :", self.cam_main.isOpened())
                 # self.master.update()
+
         show_process_image()
         self.master_op.after(10, self.Loop)
 
