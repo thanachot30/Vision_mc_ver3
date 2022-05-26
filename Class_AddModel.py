@@ -1,5 +1,4 @@
-from tracemalloc import start
-from turtle import color
+
 import cv2
 from matplotlib.pyplot import text
 import numpy as np
@@ -12,6 +11,7 @@ from PIL import Image, ImageTk      #
 
 # import class dependency
 from Class_learing import Learning
+
 
 import os
 import sys                   #
@@ -30,7 +30,6 @@ class AddModel:
         self.master_add.title("Adding new model")
         # size of windown and position start
         self.master_add.geometry("1280x720+0+0")
-        self.init_state = 0
 
         self.cropping = False
         self.x_start, self.y_start, self.x_end, self.y_end = 0, 0, 0, 0
@@ -136,6 +135,7 @@ class AddModel:
                     # add crop position to dict model
                     else:
                         print("check:", check)
+                # cam.release()
                 cv2.destroyAllWindows()
 
                 self.newModel_dict["codi_pos"].append(

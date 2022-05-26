@@ -155,8 +155,8 @@ class Learning:
                     1./255, input_shape=(img_height, img_width, 3)),
                 layers.Conv2D(16, 3, padding='same', activation='relu'),
                 layers.MaxPooling2D(),
-                # layers.Conv2D(32, 3, padding='same', activation='relu'),
-                # layers.MaxPooling2D(),
+                layers.Conv2D(32, 3, padding='same', activation='relu'),
+                layers.MaxPooling2D(),
                 # layers.Conv2D(64, 3, padding='same', activation='relu'),
                 # layers.MaxPooling2D(),
                 layers.Flatten(),
@@ -168,7 +168,7 @@ class Learning:
                               from_logits=True),
                           metrics=['accuracy'])
             # Train the model
-            epochs = 10
+            epochs = 15
             history = model.fit(
                 train_ds,
                 validation_data=val_ds,
@@ -278,7 +278,7 @@ class Learning:
             return image
 
         if self.cam_learning.isOpened():
-            chack, self.Frame_raw = self.cam_learning.read()
+            check, self.Frame_raw = self.cam_learning.read()
             self.Frame = self.Frame_raw.copy()
             # croping image position
             image_croped = draw_crop_func(
