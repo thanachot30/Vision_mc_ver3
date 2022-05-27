@@ -1,27 +1,15 @@
-from tracemalloc import start
-from turtle import color, width
-import cv2
-from matplotlib.pyplot import text
-from tkinter import *               #
 
-from tkinter import filedialog
-from tkinter import ttk
-import tkinter.messagebox
+import cv2
+from tkinter import *               #
 from PIL import Image, ImageTk      #
 
-
 import os
-from os import listdir
-import sys                   #
+from os import listdir                  #
 from functools import partial       #
-import time
-import pyautogui
 import json
-import logging
 # import for tensorflow
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL
 import tensorflow as tf
 
 from tensorflow import keras
@@ -178,8 +166,8 @@ class Learning:
                 layers.MaxPooling2D(),
                 layers.Conv2D(32, 3, padding='same', activation='relu'),
                 layers.MaxPooling2D(),
-                # layers.Conv2D(64, 3, padding='same', activation='relu'),
-                # layers.MaxPooling2D(),
+                layers.Conv2D(64, 3, padding='same', activation='relu'),
+                layers.MaxPooling2D(),
                 layers.Dropout(0.2),
                 layers.Flatten(),
                 layers.Dense(128, activation='relu'),
@@ -190,7 +178,7 @@ class Learning:
                               from_logits=True),
                           metrics=['accuracy'])
             # Train the model
-            epochs = 25
+            epochs = 3
             history = model.fit(
                 train_ds,
                 validation_data=val_ds,
