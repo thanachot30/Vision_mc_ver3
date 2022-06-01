@@ -10,14 +10,8 @@ from PIL import Image, ImageTk      #
 # import class dependency
 from Class_AddModel import AddModel
 from Class_operation import Operation
-#
-
-import os
-import sys                   #
+#               #
 from functools import partial       #
-import time
-import pyautogui
-import json
 
 
 class App:

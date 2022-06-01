@@ -178,7 +178,7 @@ class Learning:
                               from_logits=True),
                           metrics=['accuracy'])
             # Train the model
-            epochs = 3
+            epochs = 12
             history = model.fit(
                 train_ds,
                 validation_data=val_ds,
