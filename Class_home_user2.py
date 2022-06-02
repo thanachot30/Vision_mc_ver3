@@ -6,11 +6,9 @@ from tkinter import filedialog
 from tkinter import ttk
 import tkinter.messagebox
 from PIL import Image, ImageTk      #
-
-# import class dependency
 from Class_AddModel import AddModel
 from Class_operation import Operation
-#               #
+
 from functools import partial       #
 
 
